@@ -106,6 +106,7 @@ impl UserTable {
                         <th>{"First name"}</th>
                         <th>{"Last name"}</th>
                         <th>{"Creation date"}</th>
+                        <th>{"Modification date"}</th>
                         <th>{"Delete"}</th>
                       </tr>
                     </thead>
@@ -132,6 +133,7 @@ impl UserTable {
               <td>{&user.first_name}</td>
               <td>{&user.last_name}</td>
               <td>{&user.creation_date.naive_local().date()}</td>
+              <td>{&user.modification_date.naive_local().date()}</td>
               <td>
                 <DeleteUser
                   username={user.id.clone()}

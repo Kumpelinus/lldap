@@ -93,6 +93,12 @@ pub fn get_user_attribute(
                 .to_rfc3339()
                 .into_bytes(),
         ],
+        UserFieldType::PrimaryField(UserColumn::ModificationDate) => vec![
+            chrono::Utc
+                .from_utc_datetime(&user.modification_date)
+                .to_rfc3339()
+                .into_bytes(),
+        ],
         UserFieldType::Attribute(attr, _, _) => get_custom_attribute(&user.attributes, &attr)?,
         UserFieldType::NoMatch => match attribute.as_str() {
             "1.1" => return None,
@@ -133,6 +139,7 @@ const ALL_USER_ATTRIBUTE_KEYS: &[&str] = &[
     "cn",
     "jpegPhoto",
     "createtimestamp",
+    "modifytimestamp",
     "entryuuid",
 ];
 
@@ -295,6 +302,7 @@ fn convert_user_filter(
                 | UserFieldType::Dn
                 | UserFieldType::EntryDn
                 | UserFieldType::PrimaryField(UserColumn::CreationDate)
+                | UserFieldType::PrimaryField(UserColumn::ModificationDate)
                 | UserFieldType::PrimaryField(UserColumn::Uuid) => Err(LdapError {
                     code: LdapResultCode::UnwillingToPerform,
                     message: format!("Unsupported user attribute for substring filter: {field:?}"),

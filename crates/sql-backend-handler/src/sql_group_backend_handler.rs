@@ -205,6 +205,7 @@ impl GroupBackendHandler for SqlBackendHandler {
             display_name: Set(request.display_name),
             lowercase_display_name: Set(lower_display_name),
             creation_date: Set(now),
+            modification_date: Set(now),
             uuid: Set(uuid),
             ..Default::default()
         };
@@ -272,6 +273,7 @@ impl SqlBackendHandler {
             group_id: Set(request.group_id),
             display_name: request.display_name.map(Set).unwrap_or_default(),
             lowercase_display_name: lower_display_name.map(Set).unwrap_or_default(),
+            modification_date: Set(chrono::Utc::now().naive_utc()),
             ..Default::default()
         };
         update_group.update(transaction).await?;

@@ -35,6 +35,15 @@ impl From<Schema> for PublicSchema {
                 is_readonly: true,
             },
             AttributeSchema {
+                name: "modification_date".into(),
+                attribute_type: AttributeType::DateTime,
+                is_list: false,
+                is_visible: true,
+                is_editable: false,
+                is_hardcoded: true,
+                is_readonly: true,
+            },
+            AttributeSchema {
                 name: "mail".into(),
                 attribute_type: AttributeType::String,
                 is_list: false,
@@ -78,6 +87,15 @@ impl From<Schema> for PublicSchema {
             },
             AttributeSchema {
                 name: "creation_date".into(),
+                attribute_type: AttributeType::DateTime,
+                is_list: false,
+                is_visible: true,
+                is_editable: false,
+                is_hardcoded: true,
+                is_readonly: true,
+            },
+            AttributeSchema {
+                name: "modification_date".into(),
                 attribute_type: AttributeType::DateTime,
                 is_list: false,
                 is_visible: true,

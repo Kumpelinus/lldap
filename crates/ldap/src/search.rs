@@ -260,7 +260,7 @@ pub fn make_ldap_subschema_entry(schema: PublicSchema) -> LdapOp {
                     ldap_schema_description
                         .formatted_attribute_list(
                             4, // The number of hardcoded attributes starting with "10." (LLDAP custom range)
-                            vec!["creation_date", "display_name", "last_name", "user_id", "uuid"]
+                            vec!["creation_date", "modification_date", "display_name", "last_name", "user_id", "uuid"]
                         )
                 ).collect()
             }
@@ -733,6 +733,7 @@ mod tests {
                         group_id: GroupId(42),
                         display_name: "rockstars".into(),
                         creation_date: chrono::Utc.timestamp_opt(42, 42).unwrap().naive_utc(),
+                        modification_date: chrono::Utc.timestamp_opt(42, 42).unwrap().naive_utc(),
                         uuid: uuid!("a1a2a3a4b1b2c1c2d1d2d3d4d5d6d7d8"),
                         attributes: Vec::new(),
                     }]),
@@ -837,6 +838,10 @@ mod tests {
                         ],
                         uuid: uuid!("04ac75e0-2900-3e21-926c-2f732c26b3fc"),
                         creation_date: Utc
+                            .with_ymd_and_hms(2014, 7, 8, 9, 10, 11)
+                            .unwrap()
+                            .naive_utc(),
+                        modification_date: Utc
                             .with_ymd_and_hms(2014, 7, 8, 9, 10, 11)
                             .unwrap()
                             .naive_utc(),
@@ -971,6 +976,7 @@ mod tests {
                         id: GroupId(1),
                         display_name: "group_1".into(),
                         creation_date: chrono::Utc.timestamp_opt(42, 42).unwrap().naive_utc(),
+                        modification_date: chrono::Utc.timestamp_opt(42, 42).unwrap().naive_utc(),
                         users: vec![UserId::new("bob"), UserId::new("john")],
                         uuid: uuid!("04ac75e0-2900-3e21-926c-2f732c26b3fc"),
                         attributes: Vec::new(),
@@ -979,6 +985,7 @@ mod tests {
                         id: GroupId(3),
                         display_name: "BestGroup".into(),
                         creation_date: chrono::Utc.timestamp_opt(42, 42).unwrap().naive_utc(),
+                        modification_date: chrono::Utc.timestamp_opt(42, 42).unwrap().naive_utc(),
                         users: vec![UserId::new("john")],
                         uuid: uuid!("04ac75e0-2900-3e21-926c-2f732c26b3fc"),
                         attributes: Vec::new(),
@@ -1069,6 +1076,7 @@ mod tests {
                     id: GroupId(1),
                     display_name: "group_1".into(),
                     creation_date: chrono::Utc.timestamp_opt(42, 42).unwrap().naive_utc(),
+                    modification_date: chrono::Utc.timestamp_opt(42, 42).unwrap().naive_utc(),
                     users: vec![UserId::new("bob"), UserId::new("john")],
                     uuid: uuid!("04ac75e0-2900-3e21-926c-2f732c26b3fc"),
                     attributes: Vec::new(),
@@ -1119,6 +1127,7 @@ mod tests {
                     display_name: "group_1".into(),
                     id: GroupId(1),
                     creation_date: chrono::Utc.timestamp_opt(42, 42).unwrap().naive_utc(),
+                    modification_date: chrono::Utc.timestamp_opt(42, 42).unwrap().naive_utc(),
                     users: vec![],
                     uuid: uuid!("04ac75e0-2900-3e21-926c-2f732c26b3fc"),
                     attributes: Vec::new(),
@@ -1190,6 +1199,7 @@ mod tests {
                     display_name: "group_1".into(),
                     id: GroupId(1),
                     creation_date: chrono::Utc.timestamp_opt(42, 42).unwrap().naive_utc(),
+                    modification_date: chrono::Utc.timestamp_opt(42, 42).unwrap().naive_utc(),
                     users: vec![],
                     uuid: uuid!("04ac75e0-2900-3e21-926c-2f732c26b3fc"),
                     attributes: Vec::new(),
@@ -1238,6 +1248,7 @@ mod tests {
                     display_name: "group_1".into(),
                     id: GroupId(1),
                     creation_date: chrono::Utc.timestamp_opt(42, 42).unwrap().naive_utc(),
+                    modification_date: chrono::Utc.timestamp_opt(42, 42).unwrap().naive_utc(),
                     users: vec![],
                     uuid: uuid!("04ac75e0-2900-3e21-926c-2f732c26b3fc"),
                     attributes: vec![Attribute {
@@ -1698,6 +1709,7 @@ mod tests {
                     id: GroupId(1),
                     display_name: "group_1".into(),
                     creation_date: chrono::Utc.timestamp_opt(42, 42).unwrap().naive_utc(),
+                    modification_date: chrono::Utc.timestamp_opt(42, 42).unwrap().naive_utc(),
                     users: vec![UserId::new("bob"), UserId::new("john")],
                     uuid: uuid!("04ac75e0-2900-3e21-926c-2f732c26b3fc"),
                     attributes: Vec::new(),
@@ -1782,6 +1794,7 @@ mod tests {
                     id: GroupId(1),
                     display_name: "group_1".into(),
                     creation_date: chrono::Utc.timestamp_opt(42, 42).unwrap().naive_utc(),
+                    modification_date: chrono::Utc.timestamp_opt(42, 42).unwrap().naive_utc(),
                     users: vec![UserId::new("bob"), UserId::new("john")],
                     uuid: uuid!("04ac75e0-2900-3e21-926c-2f732c26b3fc"),
                     attributes: Vec::new(),
@@ -2039,6 +2052,7 @@ mod tests {
                 id: GroupId(1),
                 display_name: "group".into(),
                 creation_date: chrono::Utc.timestamp_opt(42, 42).unwrap().naive_utc(),
+                modification_date: chrono::Utc.timestamp_opt(42, 42).unwrap().naive_utc(),
                 users: vec![UserId::new("bob")],
                 uuid: uuid!("04ac75e0-2900-3e21-926c-2f732c26b3fc"),
                 attributes: vec![Attribute {

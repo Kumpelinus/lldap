@@ -5,6 +5,7 @@ query GetUserDetails($id: String!) {
     avatar
     displayName
     creationDate
+    modificationDate
     uuid
     groups {
       id

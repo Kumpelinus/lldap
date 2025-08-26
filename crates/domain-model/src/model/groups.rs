@@ -13,6 +13,7 @@ pub struct Model {
     pub display_name: GroupName,
     pub lowercase_display_name: String,
     pub creation_date: chrono::NaiveDateTime,
+    pub modification_date: chrono::NaiveDateTime,
     pub uuid: Uuid,
 }
 
@@ -36,6 +37,7 @@ impl From<Model> for lldap_domain::types::Group {
             id: group.group_id,
             display_name: group.display_name,
             creation_date: group.creation_date,
+            modification_date: group.modification_date,
             uuid: group.uuid,
             users: vec![],
             attributes: Vec::new(),
@@ -49,6 +51,7 @@ impl From<Model> for lldap_domain::types::GroupDetails {
             group_id: group.group_id,
             display_name: group.display_name,
             creation_date: group.creation_date,
+            modification_date: group.modification_date,
             uuid: group.uuid,
             attributes: Vec::new(),
         }

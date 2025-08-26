@@ -195,6 +195,7 @@ impl SqlBackendHandler {
             email: request.email.map(ActiveValue::Set).unwrap_or_default(),
             lowercase_email: lower_email.map(ActiveValue::Set).unwrap_or_default(),
             display_name: to_value(&request.display_name),
+            modification_date: ActiveValue::Set(chrono::Utc::now().naive_utc()),
             ..Default::default()
         };
         let mut update_user_attributes = Vec::new();
@@ -324,6 +325,7 @@ impl UserBackendHandler for SqlBackendHandler {
             lowercase_email: Set(lower_email),
             display_name: to_value(&request.display_name),
             creation_date: ActiveValue::Set(now),
+            modification_date: ActiveValue::Set(now),
             uuid: ActiveValue::Set(uuid),
             ..Default::default()
         };

@@ -239,8 +239,11 @@ pub fn map_user_field(field: &AttributeName, schema: &PublicSchema) -> UserField
             AttributeType::JpegPhoto,
             false,
         ),
-        "creationdate" | "createtimestamp" | "modifytimestamp" | "creation_date" => {
+        "creationdate" | "createtimestamp" | "creation_date" => {
             UserFieldType::PrimaryField(UserColumn::CreationDate)
+        }
+        "modificationdate" | "modifytimestamp" | "modification_date" => {
+            UserFieldType::PrimaryField(UserColumn::ModificationDate)
         }
         "entryuuid" | "uuid" => UserFieldType::PrimaryField(UserColumn::Uuid),
         _ => schema
@@ -257,6 +260,7 @@ pub enum GroupFieldType {
     GroupId,
     DisplayName,
     CreationDate,
+    ModificationDate,
     ObjectClass,
     Dn,
     // Like Dn, but returned as part of the attributes.
@@ -272,8 +276,9 @@ pub fn map_group_field(field: &AttributeName, schema: &PublicSchema) -> GroupFie
         "entrydn" => GroupFieldType::EntryDn,
         "objectclass" => GroupFieldType::ObjectClass,
         "cn" | "displayname" | "uid" | "display_name" | "id" => GroupFieldType::DisplayName,
-        "creationdate" | "createtimestamp" | "modifytimestamp" | "creation_date" => {
-            GroupFieldType::CreationDate
+        "creationdate" | "createtimestamp" | "creation_date" => GroupFieldType::CreationDate,
+        "modificationdate" | "modifytimestamp" | "modification_date" => {
+            GroupFieldType::ModificationDate
         }
         "member" | "uniquemember" => GroupFieldType::Member,
         "entryuuid" | "uuid" => GroupFieldType::Uuid,

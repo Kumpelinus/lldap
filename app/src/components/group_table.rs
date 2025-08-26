@@ -96,6 +96,7 @@ impl GroupTable {
                       <tr>
                         <th>{"Group name"}</th>
                         <th>{"Creation date"}</th>
+                        <th>{"Modification date"}</th>
                         <th>{"Delete"}</th>
                       </tr>
                     </thead>

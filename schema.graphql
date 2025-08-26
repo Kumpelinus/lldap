@@ -28,6 +28,7 @@ type Group {
   id: Int!
   displayName: String!
   creationDate: DateTimeUtc!
+  modificationDate: DateTimeUtc!
   uuid: String!
   "User-defined attributes."
   attributes: [AttributeValue!]!
@@ -174,6 +175,7 @@ type User {
   lastName: String!
   avatar: String
   creationDate: DateTimeUtc!
+  modificationDate: DateTimeUtc!
   uuid: String!
   "User-defined attributes."
   attributes: [AttributeValue!]!

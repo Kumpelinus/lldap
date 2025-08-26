@@ -329,6 +329,10 @@ impl<Handler: BackendHandler> User<Handler> {
         chrono::Utc.from_utc_datetime(&self.user.creation_date)
     }
 
+    fn modification_date(&self) -> chrono::DateTime<chrono::Utc> {
+        chrono::Utc.from_utc_datetime(&self.user.modification_date)
+    }
+
     fn uuid(&self) -> &str {
         self.user.uuid.as_str()
     }
@@ -369,6 +373,7 @@ pub struct Group<Handler: BackendHandler> {
     group_id: i32,
     display_name: String,
     creation_date: chrono::NaiveDateTime,
+    modification_date: chrono::NaiveDateTime,
     uuid: String,
     attributes: Vec<AttributeValue<Handler>>,
     schema: Arc<PublicSchema>,
@@ -386,6 +391,7 @@ impl<Handler: BackendHandler> Group<Handler> {
             group_id: group.id.0,
             display_name: group.display_name.to_string(),
             creation_date: group.creation_date,
+            modification_date: group.modification_date,
             uuid: group.uuid.into_string(),
             attributes,
             schema,
@@ -405,6 +411,7 @@ impl<Handler: BackendHandler> Group<Handler> {
             group_id: group_details.group_id.0,
             display_name: group_details.display_name.to_string(),
             creation_date: group_details.creation_date,
+            modification_date: group_details.modification_date,
             uuid: group_details.uuid.into_string(),
             attributes,
             schema,
@@ -419,6 +426,7 @@ impl<Handler: BackendHandler> Clone for Group<Handler> {
             group_id: self.group_id,
             display_name: self.display_name.clone(),
             creation_date: self.creation_date,
+            modification_date: self.modification_date,
             uuid: self.uuid.clone(),
             attributes: self.attributes.clone(),
             schema: self.schema.clone(),
@@ -437,6 +445,9 @@ impl<Handler: BackendHandler> Group<Handler> {
     }
     fn creation_date(&self) -> chrono::DateTime<chrono::Utc> {
         chrono::Utc.from_utc_datetime(&self.creation_date)
+    }
+    fn modification_date(&self) -> chrono::DateTime<chrono::Utc> {
+        chrono::Utc.from_utc_datetime(&self.modification_date)
     }
     fn uuid(&self) -> String {
         self.uuid.clone()
@@ -716,6 +727,7 @@ impl<Handler: BackendHandler> AttributeValue<Handler> {
                 let value: Option<DomainAttributeValue> = match attribute_schema.name.as_str() {
                     "user_id" => Some(user.user_id.clone().into_string().into()),
                     "creation_date" => Some(user.creation_date.into()),
+                    "modification_date" => Some(user.modification_date.into()),
                     "mail" => Some(user.email.clone().into_string().into()),
                     "uuid" => Some(user.uuid.clone().into_string().into()),
                     "display_name" => user.display_name.as_ref().map(|d| d.clone().into()),
@@ -760,6 +772,7 @@ impl<Handler: BackendHandler> AttributeValue<Handler> {
                     match attribute_schema.name.as_str() {
                         "group_id" => (group.id.0 as i64).into(),
                         "creation_date" => group.creation_date.into(),
+                        "modification_date" => group.modification_date.into(),
                         "uuid" => group.uuid.clone().into_string().into(),
                         "display_name" => group.display_name.clone().into_string().into(),
                         _ => panic!("Unexpected hardcoded attribute: {}", attribute_schema.name),
@@ -802,6 +815,7 @@ impl<Handler: BackendHandler> AttributeValue<Handler> {
                     match attribute_schema.name.as_str() {
                         "group_id" => (group.group_id.0 as i64).into(),
                         "creation_date" => group.creation_date.into(),
+                        "modification_date" => group.modification_date.into(),
                         "uuid" => group.uuid.clone().into_string().into(),
                         "display_name" => group.display_name.clone().into_string().into(),
                         _ => panic!("Unexpected hardcoded attribute: {}", attribute_schema.name),
@@ -953,6 +967,7 @@ mod tests {
             group_id: GroupId(3),
             display_name: "Bobbersons".into(),
             creation_date: chrono::Utc.timestamp_nanos(42).naive_utc(),
+            modification_date: chrono::Utc.timestamp_nanos(42).naive_utc(),
             uuid: lldap_domain::uuid!("a1a2a3a4b1b2c1c2d1d2d3d4d5d6d7d8"),
             attributes: vec![DomainAttribute {
                 name: "club_name".into(),
@@ -963,6 +978,7 @@ mod tests {
             group_id: GroupId(7),
             display_name: "Jefferees".into(),
             creation_date: chrono::Utc.timestamp_nanos(12).naive_utc(),
+            modification_date: chrono::Utc.timestamp_nanos(12).naive_utc(),
             uuid: lldap_domain::uuid!("b1a2a3a4b1b2c1c2d1d2d3d4d5d6d7d8"),
             attributes: Vec::new(),
         });

@@ -72,6 +72,12 @@ pub fn get_group_attribute(
                 .to_rfc3339()
                 .into_bytes(),
         ],
+        GroupFieldType::ModificationDate => vec![
+            chrono::Utc
+                .from_utc_datetime(&group.modification_date)
+                .to_rfc3339()
+                .into_bytes(),
+        ],
         GroupFieldType::Member => group
             .users
             .iter()
@@ -259,6 +265,11 @@ fn convert_group_filter(
                 GroupFieldType::CreationDate => Err(LdapError {
                     code: LdapResultCode::UnwillingToPerform,
                     message: "Creation date filter for groups not supported".to_owned(),
+                }),
+                GroupFieldType::ModificationDate => Err(LdapError {
+                    // TODO maybe implement that?
+                    code: LdapResultCode::UnwillingToPerform,
+                    message: "Modification date filter for groups not supported".to_owned(),
                 }),
             }
         }

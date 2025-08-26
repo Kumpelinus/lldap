@@ -183,7 +183,7 @@ get_user_details() {
   local id="$1"
 
   # shellcheck disable=SC2016
-  local query='{"query":"query GetUserDetails($id: String!) {user(userId: $id) {id email displayName firstName lastName creationDate uuid groups {id displayName} attributes {name value}}}","operationName":"GetUserDetails"}'
+  local query='{"query":"query GetUserDetails($id: String!) {user(userId: $id) {id email displayName firstName lastName creationDate modificationDate uuid groups {id displayName} attributes {name value}}}","operationName":"GetUserDetails"}'
   make_query <(printf '%s' "$query") <(jo -- id="$id")
 }
 
@@ -260,7 +260,7 @@ remove_user_from_group() {
 
 get_users_list() {
   # shellcheck disable=SC2016
-  local query='{"query": "query ListUsersQuery($filters: RequestFilter) {users(filters: $filters) {id email displayName firstName lastName creationDate}}","operationName": "ListUsersQuery"}'
+  local query='{"query": "query ListUsersQuery($filters: RequestFilter) {users(filters: $filters) {id email displayName firstName lastName creationDate modificationDate}}","operationName": "ListUsersQuery"}'
   make_query <(printf '%s' "$query") <(jo -- filters=null)
 }
 
@@ -552,7 +552,7 @@ create_user() {
   fi
 
   # shellcheck disable=SC2016
-  local query='{"query":"mutation CreateUser($user: CreateUserInput!) {createUser(user: $user) {id creationDate}}","operationName":"CreateUser"}'
+  local query='{"query":"mutation CreateUser($user: CreateUserInput!) {createUser(user: $user) {id creationDate modificationDate}}","operationName":"CreateUser"}'
 
   local response='' error=''
   response="$(__common_user_mutation_query "$query" "$@")"

@@ -544,6 +544,7 @@ pub struct User {
     pub email: Email,
     pub display_name: Option<String>,
     pub creation_date: NaiveDateTime,
+    pub modification_date: NaiveDateTime,
     pub uuid: Uuid,
     pub attributes: Vec<Attribute>,
 }
@@ -557,6 +558,7 @@ impl Default for User {
             email: Email::default(),
             display_name: None,
             creation_date: epoch,
+            modification_date: epoch,
             uuid: Uuid::from_name_and_date("", &epoch),
             attributes: Vec::new(),
         }
@@ -651,6 +653,7 @@ pub struct Group {
     pub id: GroupId,
     pub display_name: GroupName,
     pub creation_date: NaiveDateTime,
+    pub modification_date: NaiveDateTime,
     pub uuid: Uuid,
     pub users: Vec<UserId>,
     pub attributes: Vec<Attribute>,
@@ -661,6 +664,7 @@ pub struct GroupDetails {
     pub group_id: GroupId,
     pub display_name: GroupName,
     pub creation_date: NaiveDateTime,
+    pub modification_date: NaiveDateTime,
     pub uuid: Uuid,
     pub attributes: Vec<Attribute>,
 }
