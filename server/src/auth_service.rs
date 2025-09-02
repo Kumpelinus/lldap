@@ -15,7 +15,6 @@ use chrono::prelude::*;
 use futures::future::{Ready, ok};
 use futures_util::FutureExt;
 use hmac::Hmac;
-use ipnet::IpNet;
 use jwt::{SignWithKey, VerifyWithKey};
 use lldap_access_control::{ReadonlyBackendHandler, UserReadableBackendHandler};
 use lldap_auth::{
@@ -31,9 +30,7 @@ use sha2::Sha512;
 use std::{
     collections::HashSet,
     hash::Hash,
-    net::{IpAddr, SocketAddr},
     pin::Pin,
-    str::FromStr,
     task::{Context, Poll},
 };
 use time::ext::NumericalDuration;
@@ -169,54 +166,6 @@ where
         )))
 }
 
-fn get_client_ip(request: &HttpRequest) -> Option<IpAddr> {
-    // Try to get the real IP from common proxy headers first
-    if let Some(forwarded_for) = request.headers().get("x-forwarded-for") {
-        if let Ok(header_value) = forwarded_for.to_str() {
-            // Take the first IP in the chain (the original client)
-            if let Some(ip_str) = header_value.split(',').next() {
-                if let Ok(ip) = IpAddr::from_str(ip_str.trim()) {
-                    return Some(ip);
-                }
-            }
-        }
-    }
-
-    if let Some(real_ip) = request.headers().get("x-real-ip") {
-        if let Ok(header_value) = real_ip.to_str() {
-            if let Ok(ip) = IpAddr::from_str(header_value.trim()) {
-                return Some(ip);
-            }
-        }
-    }
-
-    // Fall back to connection info if available
-    if let Some(connection_info) = request.connection_info().peer_addr() {
-        if let Ok(socket_addr) = connection_info.parse::<SocketAddr>() {
-            return Some(socket_addr.ip());
-        }
-        // Try parsing as just an IP address
-        if let Ok(ip) = IpAddr::from_str(connection_info) {
-            return Some(ip);
-        }
-    }
-
-    None
-}
-
-fn is_ip_in_trusted_cidrs(ip: IpAddr, trusted_cidrs: &[String]) -> bool {
-    for cidr_str in trusted_cidrs {
-        if let Ok(cidr) = IpNet::from_str(cidr_str) {
-            if cidr.contains(&ip) {
-                return true;
-            }
-        } else {
-            warn!("Invalid CIDR in trusted_cidrs configuration: {}", cidr_str);
-        }
-    }
-    false
-}
-
 async fn validate_trusted_header<Backend>(
     data: &web::Data<AppState<Backend>>,
     request: &HttpRequest,
@@ -224,20 +173,6 @@ async fn validate_trusted_header<Backend>(
 where
     Backend: TcpBackendHandler + BackendHandler + 'static,
 {
-    // First, validate the client IP is from a trusted source
-    let client_ip = get_client_ip(request).ok_or_else(|| {
-        TcpError::UnauthorizedError("Unable to determine client IP address".to_string())
-    })?;
-
-    if !is_ip_in_trusted_cidrs(client_ip, &data.trusted_header_options.trusted_cidrs) {
-        return Err(TcpError::UnauthorizedError(format!(
-            "Client IP {} is not in trusted CIDR list",
-            client_ip
-        )));
-    }
-
-    debug!("Trusted header request from allowed IP: {}", client_ip);
-
     // Get the username from the trusted header
     let header_name = &data.trusted_header_options.header_name;
     let username = request
@@ -283,23 +218,23 @@ where
     Backend: TcpBackendHandler + BackendHandler + 'static,
 {
     let user_id = validate_trusted_header(data, request).await?;
+    // Get user groups to determine admin status
+    let groups = data
+        .get_readonly_handler()
+        .get_user_groups(&user_id)
+        .await?;
+    let is_admin = groups
+        .iter()
+        .any(|g| g.display_name == "lldap_admin".into());
 
-    // Clear any conflicting authentication cookies first
-    let mut response = get_login_successful_response(data, &user_id).await?;
-
-    // Clear any existing conflicting cookies by setting them to expire
-    let mut path = data.server_url.path().to_string();
-    if !path.ends_with('/') {
-        path.push('/');
-    }
-
-    // Add headers to clear any potentially conflicting authentication state
-    response.headers_mut().insert(
-        actix_web::http::header::CACHE_CONTROL,
-        "no-cache, no-store, must-revalidate".parse().unwrap(),
-    );
-
-    Ok(response)
+    Ok(
+        HttpResponse::Ok().json(&login::ServerAuthResponse::TrustedHeader(
+            login::ServerTrustedHeaderResponse {
+                user_id: user_id.to_string(),
+                is_admin,
+            },
+        )),
+    )
 }
 
 async fn get_refresh_handler<Backend>(
@@ -655,23 +590,7 @@ where
     }
 
     let user_id = validate_trusted_header(&data, &request).await?;
-
-    // Create JWT tokens and cookies just like regular login
-    let mut response = get_login_successful_response(&data, &user_id).await?;
-
-    // Clear any conflicting authentication state
-    let mut path = data.server_url.path().to_string();
-    if !path.ends_with('/') {
-        path.push('/');
-    }
-
-    // Add headers to ensure fresh authentication state
-    response.headers_mut().insert(
-        actix_web::http::header::CACHE_CONTROL,
-        "no-cache, no-store, must-revalidate".parse().unwrap(),
-    );
-
-    Ok(response)
+    get_trusted_header_successful_response(&data, &user_id).await
 }
 
 async fn trusted_header_auth_handler<Backend>(
@@ -865,17 +784,6 @@ pub(crate) async fn check_if_trusted_header_is_valid<Backend: BackendHandler>(
         return Err(ErrorUnauthorized(
             "Trusted header authentication is disabled",
         ));
-    }
-
-    // Validate client IP is from a trusted source
-    let client_ip = get_client_ip(request)
-        .ok_or_else(|| ErrorUnauthorized("Unable to determine client IP address"))?;
-
-    if !is_ip_in_trusted_cidrs(client_ip, &state.trusted_header_options.trusted_cidrs) {
-        return Err(ErrorUnauthorized(format!(
-            "Client IP {} is not in trusted CIDR list",
-            client_ip
-        )));
     }
 
     let header_name = &state.trusted_header_options.header_name;
