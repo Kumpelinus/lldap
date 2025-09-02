@@ -1,4 +1,7 @@
-use crate::{auth_service::check_if_token_is_valid, tcp_server::AppState};
+use crate::{
+    auth_service::{check_if_token_is_valid, check_if_trusted_header_is_valid},
+    tcp_server::AppState,
+};
 use actix_web::FromRequest;
 use actix_web::HttpMessage;
 use actix_web::{Error, HttpRequest, HttpResponse, error::JsonPayloadError, web};
@@ -125,8 +128,16 @@ async fn graphql_route<Handler: BackendHandler + Clone>(
     data: web::Data<AppState<Handler>>,
 ) -> Result<HttpResponse, Error> {
     let mut inner_payload = payload.into_inner();
-    let bearer = BearerAuth::from_request(&req, &mut inner_payload).await?;
-    let validation_result = check_if_token_is_valid(&data, bearer.token())?;
+
+    // Try JWT token authentication first
+    let validation_result =
+        if let Ok(bearer) = BearerAuth::from_request(&req, &mut inner_payload).await {
+            check_if_token_is_valid(&data, bearer.token())
+        } else {
+            // If JWT fails, try trusted header authentication
+            check_if_trusted_header_is_valid(&data, &req).await
+        }?;
+
     let context = Context::<Handler> {
         handler: data.backend_handler.clone(),
         validation_result,
