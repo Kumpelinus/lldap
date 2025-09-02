@@ -1,6 +1,6 @@
 use crate::{
     auth_service,
-    configuration::{Configuration, MailOptions},
+    configuration::{Configuration, MailOptions, TrustedHeaderOptions},
     logging::CustomRootSpanBuilder,
     tcp_backend_handler::*,
 };
@@ -120,6 +120,7 @@ fn http_config<Backend>(
     server_url: url::Url,
     assets_path: PathBuf,
     mail_options: MailOptions,
+    trusted_header_options: TrustedHeaderOptions,
 ) where
     Backend: TcpBackendHandler + BackendHandler + LoginHandler + OpaqueHandler + Clone + 'static,
 {
@@ -131,6 +132,7 @@ fn http_config<Backend>(
         server_url,
         assets_path: assets_path.clone(),
         mail_options,
+        trusted_header_options,
     }))
     .route(
         "/health",
@@ -175,6 +177,7 @@ pub(crate) struct AppState<Backend> {
     pub server_url: url::Url,
     pub assets_path: PathBuf,
     pub mail_options: MailOptions,
+    pub trusted_header_options: TrustedHeaderOptions,
 }
 
 impl<Backend: BackendHandler> AppState<Backend> {
@@ -214,6 +217,7 @@ where
     let server_url = config.http_url.0.clone();
     let assets_path = config.assets_path.clone();
     let mail_options = config.smtp_options.clone();
+    let trusted_header_options = config.trusted_header_options.clone();
     let verbose = config.verbose;
     if !assets_path.join("index.html").exists() {
         warn!(
@@ -233,6 +237,7 @@ where
                 let server_url = server_url.clone();
                 let assets_path = assets_path.clone();
                 let mail_options = mail_options.clone();
+                let trusted_header_options = trusted_header_options.clone();
                 HttpServiceBuilder::default()
                     .finish(map_config(
                         App::new()
@@ -249,6 +254,7 @@ where
                                     server_url,
                                     assets_path,
                                     mail_options,
+                                    trusted_header_options,
                                 )
                             }),
                         |_| AppConfig::default(),
