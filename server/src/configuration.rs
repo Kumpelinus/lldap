@@ -92,6 +92,8 @@ pub struct TrustedHeaderOptions {
     pub header_name: String,
     #[builder(default = "None")]
     pub logout_url: Option<String>,
+    #[builder(default = "vec![\"127.0.0.0/8\".to_string(), \"::1/128\".to_string()]")]
+    pub trusted_cidrs: Vec<String>,
 }
 
 impl std::default::Default for TrustedHeaderOptions {
