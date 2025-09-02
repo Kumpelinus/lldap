@@ -502,7 +502,10 @@ impl ConfigOverrider for TrustedHeaderOpts {
             config.trusted_header_options.enabled = enabled;
         }
         if let Some(header_name) = self.trusted_header_name.as_ref() {
-            config.trusted_header_options.header_name.clone_from(header_name);
+            config
+                .trusted_header_options
+                .header_name
+                .clone_from(header_name);
         }
         if let Some(logout_url) = self.trusted_header_logout_url.as_ref() {
             config.trusted_header_options.logout_url = Some(logout_url.clone());
