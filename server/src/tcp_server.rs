@@ -112,6 +112,7 @@ async fn get_settings<Backend>(data: web::Data<AppState<Backend>>) -> HttpRespon
     })
 }
 
+#[allow(clippy::too_many_arguments)]
 fn http_config<Backend>(
     cfg: &mut web::ServiceConfig,
     backend_handler: Backend,
