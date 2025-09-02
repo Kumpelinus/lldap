@@ -1,0 +1,13 @@
+## Test configuration for trusted header authentication
+verbose = true
+ldap_base_dn = "dc=example,dc=com"
+ldap_user_dn = "admin"
+ldap_user_pass = "password"
+jwt_secret = "SUPERSECRET_JWT_TOKEN_PLEASE_CHANGE_ME"
+key_seed = "test_seed_for_private_key"
+database_url = "sqlite:///tmp/test_users.db?mode=rwc"
+
+[trusted_header_options]
+enabled = true
+header_name = "Remote-User"
+logout_url = "https://example.com/logout"
