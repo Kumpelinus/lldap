@@ -103,8 +103,37 @@ async fn get_refresh<Backend>(
 where
     Backend: TcpBackendHandler + BackendHandler + 'static,
 {
+    // First try to refresh with existing refresh token
+    match try_refresh_token(&data, &request).await {
+        Ok(response) => return Ok(response),
+        Err(_) => {
+            // If refresh token fails, try trusted header auth if enabled
+            if data.trusted_header_options.enabled {
+                match try_trusted_header_auth(&data, &request).await {
+                    Ok(response) => return Ok(response),
+                    Err(_) => {
+                        // Both methods failed, return the original refresh token error
+                    }
+                }
+            }
+        }
+    }
+
+    // Both refresh token and trusted header auth failed
+    Err(TcpError::DomainError(DomainError::AuthenticationError(
+        "Authentication failed".to_string(),
+    )))
+}
+
+async fn try_refresh_token<Backend>(
+    data: &web::Data<AppState<Backend>>,
+    request: &HttpRequest,
+) -> TcpResult<HttpResponse>
+where
+    Backend: TcpBackendHandler + BackendHandler + 'static,
+{
     let jwt_key = &data.jwt_key;
-    let (refresh_token_hash, user) = get_refresh_token(request)?;
+    let (refresh_token_hash, user) = get_refresh_token(request.clone())?;
     let found = data
         .get_tcp_handler()
         .check_token(refresh_token_hash, &user)
@@ -133,6 +162,55 @@ where
             token: token.as_str().to_owned(),
             refresh_token: None,
         }))
+}
+
+async fn try_trusted_header_auth<Backend>(
+    data: &web::Data<AppState<Backend>>,
+    request: &HttpRequest,
+) -> TcpResult<HttpResponse>
+where
+    Backend: TcpBackendHandler + BackendHandler + 'static,
+{
+    // Get the username from the trusted header
+    let header_name = &data.trusted_header_options.header_name;
+    let username = request
+        .headers()
+        .get(header_name)
+        .and_then(|h| h.to_str().ok())
+        .ok_or_else(|| {
+            TcpError::UnauthorizedError(format!(
+                "Missing trusted header: {}",
+                header_name
+            ))
+        })?;
+
+    // Validate the username is not empty
+    if username.trim().is_empty() {
+        return Err(TcpError::UnauthorizedError(
+            "Empty username in trusted header".to_string(),
+        ));
+    }
+
+    let user_id = UserId::new(username);
+
+    // Check if the user exists in LLDAP
+    let user_exists = data
+        .get_readonly_handler()
+        .list_users(
+            Some(UserRequestFilter::UserId(user_id.clone())),
+            false,
+        )
+        .await?
+        .len() > 0;
+
+    if !user_exists {
+        return Err(TcpError::UnauthorizedError(format!(
+            "User {} not found in LLDAP",
+            username
+        )));
+    }
+
+    get_login_successful_response(data, &user_id).await
 }
 
 async fn get_refresh_handler<Backend>(
@@ -451,6 +529,75 @@ where
 }
 
 #[instrument(skip_all, level = "debug")]
+async fn trusted_header_auth<Backend>(
+    data: web::Data<AppState<Backend>>,
+    request: HttpRequest,
+) -> TcpResult<HttpResponse>
+where
+    Backend: TcpBackendHandler + BackendHandler + 'static,
+{
+    // Check if trusted header auth is enabled
+    if !data.trusted_header_options.enabled {
+        return Err(TcpError::UnauthorizedError(
+            "Trusted header authentication is disabled".to_string(),
+        ));
+    }
+
+    // Get the username from the trusted header
+    let header_name = &data.trusted_header_options.header_name;
+    let username = request
+        .headers()
+        .get(header_name)
+        .and_then(|h| h.to_str().ok())
+        .ok_or_else(|| {
+            TcpError::UnauthorizedError(format!(
+                "Missing or invalid trusted header: {}",
+                header_name
+            ))
+        })?;
+
+    // Validate the username is not empty
+    if username.trim().is_empty() {
+        return Err(TcpError::UnauthorizedError(
+            "Empty username in trusted header".to_string(),
+        ));
+    }
+
+    let user_id = UserId::new(username);
+
+    // Check if the user exists in LLDAP
+    let user_exists = data
+        .get_readonly_handler()
+        .list_users(
+            Some(UserRequestFilter::UserId(user_id.clone())),
+            false,
+        )
+        .await?
+        .len() > 0;
+
+    if !user_exists {
+        return Err(TcpError::UnauthorizedError(format!(
+            "User {} not found in LLDAP",
+            username
+        )));
+    }
+
+    get_login_successful_response(&data, &user_id).await
+}
+
+async fn trusted_header_auth_handler<Backend>(
+    data: web::Data<AppState<Backend>>,
+    request: HttpRequest,
+) -> HttpResponse
+where
+    Backend: TcpBackendHandler + BackendHandler + 'static,
+{
+    trusted_header_auth(data, request)
+        .await
+        .unwrap_or_else(error_to_http_response)
+}
+
+#[instrument(skip_all, level = "debug")]
 async fn opaque_register_start<Backend>(
     request: actix_web::HttpRequest,
     payload: actix_web::web::Payload,
@@ -632,6 +779,7 @@ where
             .route(web::post().to(opaque_login_finish_handler::<Backend>)),
     )
     .service(web::resource("/simple/login").route(web::post().to(simple_login_handler::<Backend>)))
+    .service(web::resource("/trusted-header").route(web::get().to(trusted_header_auth_handler::<Backend>)))
     .service(web::resource("/refresh").route(web::get().to(get_refresh_handler::<Backend>)))
     .service(web::resource("/logout").route(web::get().to(get_logout_handler::<Backend>)))
     .service(
