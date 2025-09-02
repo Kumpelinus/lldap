@@ -178,10 +178,7 @@ where
         .get(header_name)
         .and_then(|h| h.to_str().ok())
         .ok_or_else(|| {
-            TcpError::UnauthorizedError(format!(
-                "Missing trusted header: {}",
-                header_name
-            ))
+            TcpError::UnauthorizedError(format!("Missing trusted header: {}", header_name))
         })?;
 
     // Validate the username is not empty
@@ -196,12 +193,10 @@ where
     // Check if the user exists in LLDAP
     let user_exists = data
         .get_readonly_handler()
-        .list_users(
-            Some(UserRequestFilter::UserId(user_id.clone())),
-            false,
-        )
+        .list_users(Some(UserRequestFilter::UserId(user_id.clone())), false)
         .await?
-        .len() > 0;
+        .len()
+        > 0;
 
     if !user_exists {
         return Err(TcpError::UnauthorizedError(format!(
@@ -568,12 +563,10 @@ where
     // Check if the user exists in LLDAP
     let user_exists = data
         .get_readonly_handler()
-        .list_users(
-            Some(UserRequestFilter::UserId(user_id.clone())),
-            false,
-        )
+        .list_users(Some(UserRequestFilter::UserId(user_id.clone())), false)
         .await?
-        .len() > 0;
+        .len()
+        > 0;
 
     if !user_exists {
         return Err(TcpError::UnauthorizedError(format!(
@@ -779,7 +772,10 @@ where
             .route(web::post().to(opaque_login_finish_handler::<Backend>)),
     )
     .service(web::resource("/simple/login").route(web::post().to(simple_login_handler::<Backend>)))
-    .service(web::resource("/trusted-header").route(web::get().to(trusted_header_auth_handler::<Backend>)))
+    .service(
+        web::resource("/trusted-header")
+            .route(web::get().to(trusted_header_auth_handler::<Backend>)),
+    )
     .service(web::resource("/refresh").route(web::get().to(get_refresh_handler::<Backend>)))
     .service(web::resource("/logout").route(web::get().to(get_logout_handler::<Backend>)))
     .service(
