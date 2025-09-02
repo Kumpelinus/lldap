@@ -179,6 +179,16 @@ impl HostService {
         .and_then(set_cookies_from_jwt)
     }
 
+    pub async fn trusted_header_auth() -> Result<(String, bool)> {
+        call_server_json_with_error_message::<login::ServerLoginResponse, _>(
+            &(base_url() + "/auth/trusted-header"),
+            GET_REQUEST,
+            "Could not authenticate via trusted header: ",
+        )
+        .await
+        .and_then(set_cookies_from_jwt)
+    }
+
     // The `_request` parameter is to make it the same shape as the other functions.
     pub async fn logout() -> Result<()> {
         call_server_empty_response_with_error_message(
