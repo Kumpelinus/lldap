@@ -173,8 +173,3 @@ key_seed = "RanD0m STR1ng"
 ## Optional logout URL to redirect to when using trusted header authentication.
 ## If not specified, users will be redirected to the regular login page.
 #logout_url="https://example.com/logout"
-## List of trusted proxy IP addresses/CIDRs that are allowed to send the trusted header.
-## Only requests from these IPs will have their trusted headers processed.
-## Supports both IPv4 and IPv6 CIDR notation.
-## Default: ["127.0.0.0/8", "::1/128"] (localhost only)
-#trusted_cidrs=["127.0.0.0/8", "::1/128", "10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]
