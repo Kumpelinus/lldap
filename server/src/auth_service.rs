@@ -198,9 +198,9 @@ fn get_client_ip(request: &HttpRequest) -> Option<IpAddr> {
     None
 }
 
-fn is_ip_in_trusted_cidrs(ip: IpAddr, trusted_cidrs: &[String]) -> bool {
-    for cidr_str in trusted_cidrs {
-        if let Ok(cidr) = IpNet::from_str(cidr_str)
+fn is_ip_in_trusted_proxies(ip: IpAddr, trusted_proxies: &[String]) -> bool {
+    for proxy_str in trusted_proxies {
+        if let Ok(cidr) = IpNet::from_str(proxy_str)
             && cidr.contains(&ip)
         {
             return true;
@@ -220,9 +220,9 @@ where
     let client_ip = get_client_ip(request)
         .ok_or_else(|| TcpError::UnauthorizedError("Could not determine client IP".to_string()))?;
 
-    if !is_ip_in_trusted_cidrs(client_ip, &data.trusted_header_options.trusted_cidrs) {
+    if !is_ip_in_trusted_proxies(client_ip, &data.trusted_header_options.trusted_proxies) {
         return Err(TcpError::UnauthorizedError(format!(
-            "Client IP {} not in trusted CIDRs",
+            "Client IP {} not in trusted proxies",
             client_ip
         )));
     }
@@ -844,9 +844,9 @@ pub(crate) async fn check_if_trusted_header_is_valid<Backend: BackendHandler>(
     let client_ip =
         get_client_ip(request).ok_or_else(|| ErrorUnauthorized("Could not determine client IP"))?;
 
-    if !is_ip_in_trusted_cidrs(client_ip, &state.trusted_header_options.trusted_cidrs) {
+    if !is_ip_in_trusted_proxies(client_ip, &state.trusted_header_options.trusted_proxies) {
         return Err(ErrorUnauthorized(format!(
-            "Client IP {} not in trusted CIDRs",
+            "Client IP {} not in trusted proxies",
             client_ip
         )));
     }
