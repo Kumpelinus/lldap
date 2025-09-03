@@ -227,9 +227,9 @@ pub struct TrustedHeaderOpts {
     #[clap(long, env = "LLDAP_TRUSTED_HEADER_OPTIONS__LOGOUT_URL")]
     pub trusted_header_logout_url: Option<String>,
 
-    /// Trusted proxy IP addresses/CIDRs (comma-separated)
-    #[clap(long, env = "LLDAP_TRUSTED_HEADER_OPTIONS__TRUSTED_CIDRS")]
-    pub trusted_header_trusted_cidrs: Option<String>,
+    /// Trusted proxy IP addresses/networks (comma-separated). Supports both single IPs and CIDR notation.
+    #[clap(long, env = "LLDAP_TRUSTED_HEADER_OPTIONS__TRUSTED_PROXIES")]
+    pub trusted_header_trusted_proxies: Option<String>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize, clap::ValueEnum)]

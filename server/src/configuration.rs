@@ -93,7 +93,7 @@ pub struct TrustedHeaderOptions {
     #[builder(default = "None")]
     pub logout_url: Option<String>,
     #[builder(default = r#"vec!["127.0.0.0/8".to_string(), "::1/128".to_string()]"#)]
-    pub trusted_cidrs: Vec<String>,
+    pub trusted_proxies: Vec<String>,
 }
 
 impl std::default::Default for TrustedHeaderOptions {
@@ -512,8 +512,8 @@ impl ConfigOverrider for TrustedHeaderOpts {
         if let Some(logout_url) = self.trusted_header_logout_url.as_ref() {
             config.trusted_header_options.logout_url = Some(logout_url.clone());
         }
-        if let Some(trusted_cidrs) = self.trusted_header_trusted_cidrs.as_ref() {
-            config.trusted_header_options.trusted_cidrs = trusted_cidrs
+        if let Some(trusted_proxies) = self.trusted_header_trusted_proxies.as_ref() {
+            config.trusted_header_options.trusted_proxies = trusted_proxies
                 .split(',')
                 .map(|s| s.trim().to_string())
                 .collect();
