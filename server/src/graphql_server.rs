@@ -13,6 +13,7 @@ use juniper::{
         playground::playground_source,
     },
 };
+use lldap_auth::access_control::ValidationResults;
 use lldap_domain_handlers::handler::BackendHandler;
 use lldap_graphql_server::api::Context;
 use lldap_graphql_server::api::schema;
@@ -122,6 +123,19 @@ where
     Ok(response.content_type("application/json").body(gql_response))
 }
 
+// Helper function to try JWT authentication
+async fn try_jwt_authentication<Handler: BackendHandler + Clone>(
+    req: &actix_web::HttpRequest,
+    inner_payload: &mut actix_web::dev::Payload,
+    data: &AppState<Handler>,
+) -> Result<ValidationResults, actix_web::Error> {
+    if let Ok(bearer) = BearerAuth::from_request(req, inner_payload).await {
+        check_if_token_is_valid(data, bearer.token())
+    } else {
+        Err(actix_web::error::ErrorUnauthorized("Authentication failed"))
+    }
+}
+
 async fn graphql_route<Handler: BackendHandler + Clone>(
     req: actix_web::HttpRequest,
     payload: actix_web::web::Payload,
@@ -129,26 +143,16 @@ async fn graphql_route<Handler: BackendHandler + Clone>(
 ) -> Result<HttpResponse, Error> {
     let mut inner_payload = payload.into_inner();
 
-    // Try trusted header authentication first if enabled
+    // Try authentication: trusted headers first if enabled, then JWT fallback
     let validation_result = if data.trusted_header_options.enabled {
+        // Try trusted header auth first
         match check_if_trusted_header_is_valid(&data, &req).await {
             Ok(result) => Ok(result),
-            Err(_) => {
-                // If trusted header auth fails, try JWT token authentication
-                if let Ok(bearer) = BearerAuth::from_request(&req, &mut inner_payload).await {
-                    check_if_token_is_valid(&data, bearer.token())
-                } else {
-                    Err(actix_web::error::ErrorUnauthorized("Authentication failed"))
-                }
-            }
+            Err(_) => try_jwt_authentication(&req, &mut inner_payload, &data).await,
         }
     } else {
-        // If trusted headers are disabled, use JWT token authentication
-        if let Ok(bearer) = BearerAuth::from_request(&req, &mut inner_payload).await {
-            check_if_token_is_valid(&data, bearer.token())
-        } else {
-            Err(actix_web::error::ErrorUnauthorized("Authentication failed"))
-        }
+        // Only JWT authentication when trusted headers are disabled
+        try_jwt_authentication(&req, &mut inner_payload, &data).await
     }?;
 
     let context = Context::<Handler> {
