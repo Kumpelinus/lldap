@@ -129,14 +129,27 @@ async fn graphql_route<Handler: BackendHandler + Clone>(
 ) -> Result<HttpResponse, Error> {
     let mut inner_payload = payload.into_inner();
 
-    // Try JWT token authentication first
-    let validation_result =
+    // Try trusted header authentication first if enabled
+    let validation_result = if data.trusted_header_options.enabled {
+        match check_if_trusted_header_is_valid(&data, &req).await {
+            Ok(result) => Ok(result),
+            Err(_) => {
+                // If trusted header auth fails, try JWT token authentication
+                if let Ok(bearer) = BearerAuth::from_request(&req, &mut inner_payload).await {
+                    check_if_token_is_valid(&data, bearer.token())
+                } else {
+                    Err(actix_web::error::ErrorUnauthorized("Authentication failed"))
+                }
+            }
+        }
+    } else {
+        // If trusted headers are disabled, use JWT token authentication
         if let Ok(bearer) = BearerAuth::from_request(&req, &mut inner_payload).await {
             check_if_token_is_valid(&data, bearer.token())
         } else {
-            // If JWT fails, try trusted header authentication
-            check_if_trusted_header_is_valid(&data, &req).await
-        }?;
+            Err(actix_web::error::ErrorUnauthorized("Authentication failed"))
+        }
+    }?;
 
     let context = Context::<Handler> {
         handler: data.backend_handler.clone(),
