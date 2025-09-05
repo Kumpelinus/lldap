@@ -136,6 +136,22 @@ async fn try_jwt_authentication<Handler: BackendHandler + Clone>(
     }
 }
 
+// Helper function to check if trusted header is present
+fn has_trusted_header<Handler: BackendHandler + Clone>(
+    req: &actix_web::HttpRequest,
+    data: &AppState<Handler>,
+) -> bool {
+    if !data.trusted_header_options.enabled {
+        return false;
+    }
+    
+    req.headers()
+        .get(&data.trusted_header_options.header_name)
+        .and_then(|h| h.to_str().ok())
+        .map(|s| !s.trim().is_empty())
+        .unwrap_or(false)
+}
+
 async fn graphql_route<Handler: BackendHandler + Clone>(
     req: actix_web::HttpRequest,
     payload: actix_web::web::Payload,
@@ -143,15 +159,12 @@ async fn graphql_route<Handler: BackendHandler + Clone>(
 ) -> Result<HttpResponse, Error> {
     let mut inner_payload = payload.into_inner();
 
-    // Try authentication: trusted headers first if enabled, then JWT fallback
-    let validation_result = if data.trusted_header_options.enabled {
-        // Try trusted header auth first
-        match check_if_trusted_header_is_valid(&data, &req).await {
-            Ok(result) => Ok(result),
-            Err(_) => try_jwt_authentication(&req, &mut inner_payload, &data).await,
-        }
+    // Determine which authentication flow to use based on header presence
+    let validation_result = if has_trusted_header(&req, &data) {
+        // If trusted header is present, only use trusted header authentication
+        check_if_trusted_header_is_valid(&data, &req).await
     } else {
-        // Only JWT authentication when trusted headers are disabled
+        // If trusted header is not present, only use JWT authentication
         try_jwt_authentication(&req, &mut inner_payload, &data).await
     }?;
 
