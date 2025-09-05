@@ -137,22 +137,6 @@ async fn try_jwt_authentication<Handler: BackendHandler + Clone>(
     }
 }
 
-// Helper function to check if trusted header is present
-fn has_trusted_header<Handler: BackendHandler + Clone>(
-    req: &actix_web::HttpRequest,
-    data: &AppState<Handler>,
-) -> bool {
-    if !data.trusted_header_options.enabled {
-        return false;
-    }
-
-    req.headers()
-        .get(&data.trusted_header_options.header_name)
-        .and_then(|h| h.to_str().ok())
-        .map(|s| !s.trim().is_empty())
-        .unwrap_or(false)
-}
-
 async fn graphql_route<Handler: BackendHandler + Clone>(
     req: actix_web::HttpRequest,
     payload: actix_web::web::Payload,
@@ -160,25 +144,27 @@ async fn graphql_route<Handler: BackendHandler + Clone>(
 ) -> Result<HttpResponse, Error> {
     let mut inner_payload = payload.into_inner();
 
-    // Determine which authentication flow to use based on header presence
-    let validation_result = if has_trusted_header(&req, &data) {
-        // If trusted header is present, only use trusted header authentication
-        match check_if_trusted_header_is_valid(&data, &req).await {
-            Ok(result) => result,
-            Err(e) => {
-                warn!("Trusted header authentication failed: {}", e);
-                return Err(e);
-            }
-        }
+    // Check if trusted header authentication should be used
+    let use_trusted_header = data.trusted_header_options.enabled
+        && req
+            .headers()
+            .get(&data.trusted_header_options.header_name)
+            .and_then(|h| h.to_str().ok())
+            .map(|s| !s.trim().is_empty())
+            .unwrap_or(false);
+
+    let validation_result = if use_trusted_header {
+        // Use trusted header authentication
+        check_if_trusted_header_is_valid(&data, &req).await.map_err(|e| {
+            warn!("Trusted header authentication failed: {}", e);
+            e
+        })?
     } else {
-        // If trusted header is not present, only use JWT authentication
-        match try_jwt_authentication(&req, &mut inner_payload, &data).await {
-            Ok(result) => result,
-            Err(e) => {
-                warn!("JWT authentication failed: {}", e);
-                return Err(e);
-            }
-        }
+        // Use JWT authentication
+        try_jwt_authentication(&req, &mut inner_payload, &data).await.map_err(|e| {
+            warn!("JWT authentication failed: {}", e);
+            e
+        })?
     };
 
     let context = Context::<Handler> {
