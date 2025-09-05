@@ -161,7 +161,7 @@ where
                 .same_site(SameSite::Strict)
                 .finish(),
         )
-        .json(&login::ServerAuthResponse::Token(
+        .json(login::ServerAuthResponse::Token(
             login::ServerLoginResponse {
                 token: token.as_str().to_owned(),
                 refresh_token: None,
@@ -247,12 +247,10 @@ where
     let user_id = UserId::new(username);
 
     // Check if the user exists in LLDAP
-    let user_exists = data
+    let user_exists = !data
         .get_readonly_handler()
         .list_users(Some(UserRequestFilter::UserId(user_id.clone())), false)
-        .await?
-        .len()
-        > 0;
+        .await?.is_empty();
 
     if !user_exists {
         return Err(TcpError::UnauthorizedError(format!(
@@ -282,7 +280,7 @@ where
         .any(|g| g.display_name == "lldap_admin".into());
 
     Ok(
-        HttpResponse::Ok().json(&login::ServerAuthResponse::TrustedHeader(
+        HttpResponse::Ok().json(login::ServerAuthResponse::TrustedHeader(
             login::ServerTrustedHeaderResponse {
                 user_id: user_id.to_string(),
                 is_admin,

@@ -144,27 +144,26 @@ async fn graphql_route<Handler: BackendHandler + Clone>(
 ) -> Result<HttpResponse, Error> {
     let mut inner_payload = payload.into_inner();
 
-    // Check if trusted header authentication should be used
-    let use_trusted_header = data.trusted_header_options.enabled
+    let validation_result = if data.trusted_header_options.enabled
         && req
             .headers()
-            .get(&data.trusted_header_options.header_name)
-            .and_then(|h| h.to_str().ok())
-            .map(|s| !s.trim().is_empty())
-            .unwrap_or(false);
-
-    let validation_result = if use_trusted_header {
+            .contains_key(&data.trusted_header_options.header_name)
+    {
         // Use trusted header authentication
-        check_if_trusted_header_is_valid(&data, &req).await.map_err(|e| {
-            warn!("Trusted header authentication failed: {}", e);
-            e
-        })?
+        check_if_trusted_header_is_valid(&data, &req)
+            .await
+            .map_err(|e| {
+                warn!("Trusted header authentication failed: {}", e);
+                e
+            })?
     } else {
         // Use JWT authentication
-        try_jwt_authentication(&req, &mut inner_payload, &data).await.map_err(|e| {
-            warn!("JWT authentication failed: {}", e);
-            e
-        })?
+        try_jwt_authentication(&req, &mut inner_payload, &data)
+            .await
+            .map_err(|e| {
+                warn!("JWT authentication failed: {}", e);
+                e
+            })?
     };
 
     let context = Context::<Handler> {
