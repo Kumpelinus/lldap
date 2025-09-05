@@ -171,23 +171,24 @@ where
 
 fn get_client_ip(request: &HttpRequest) -> Option<IpAddr> {
     // Try to get the real IP from common proxy headers first
-    if let Some(forwarded_for) = request.headers().get("x-forwarded-for")
-        && let Ok(header_value) = forwarded_for.to_str()
-    {
-        // Take the first IP in the chain (the original client)
-        if let Some(ip_str) = header_value.split(',').next()
-            && let Ok(ip) = IpAddr::from_str(ip_str.trim())
-        {
-            return Some(ip);
+    if let Some(forwarded_for) = request.headers().get("x-forwarded-for") {
+        if let Ok(header_value) = forwarded_for.to_str() {
+            // Take the first IP in the chain (the original client)
+            if let Some(ip_str) = header_value.split(',').next() {
+                if let Ok(ip) = IpAddr::from_str(ip_str.trim()) {
+                    return Some(ip);
+                }
+            }
         }
     }
 
     // Try X-Real-IP header
-    if let Some(real_ip) = request.headers().get("x-real-ip")
-        && let Ok(header_value) = real_ip.to_str()
-        && let Ok(ip) = IpAddr::from_str(header_value.trim())
-    {
-        return Some(ip);
+    if let Some(real_ip) = request.headers().get("x-real-ip") {
+        if let Ok(header_value) = real_ip.to_str() {
+            if let Ok(ip) = IpAddr::from_str(header_value.trim()) {
+                return Some(ip);
+            }
+        }
     }
 
     // Fallback to connection info
@@ -200,10 +201,10 @@ fn get_client_ip(request: &HttpRequest) -> Option<IpAddr> {
 
 fn is_ip_in_trusted_proxies(ip: IpAddr, trusted_proxies: &[String]) -> bool {
     for proxy_str in trusted_proxies {
-        if let Ok(cidr) = IpNet::from_str(proxy_str)
-            && cidr.contains(&ip)
-        {
-            return true;
+        if let Ok(cidr) = IpNet::from_str(proxy_str) {
+            if cidr.contains(&ip) {
+                return true;
+            }
         }
     }
     false
