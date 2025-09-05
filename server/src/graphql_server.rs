@@ -17,6 +17,7 @@ use lldap_auth::access_control::ValidationResults;
 use lldap_domain_handlers::handler::BackendHandler;
 use lldap_graphql_server::api::Context;
 use lldap_graphql_server::api::schema;
+use tracing::warn;
 
 async fn graphiql_route() -> Result<HttpResponse, Error> {
     let html = graphiql_source("/api/graphql", None);
@@ -144,7 +145,7 @@ fn has_trusted_header<Handler: BackendHandler + Clone>(
     if !data.trusted_header_options.enabled {
         return false;
     }
-    
+
     req.headers()
         .get(&data.trusted_header_options.header_name)
         .and_then(|h| h.to_str().ok())
@@ -162,11 +163,23 @@ async fn graphql_route<Handler: BackendHandler + Clone>(
     // Determine which authentication flow to use based on header presence
     let validation_result = if has_trusted_header(&req, &data) {
         // If trusted header is present, only use trusted header authentication
-        check_if_trusted_header_is_valid(&data, &req).await
+        match check_if_trusted_header_is_valid(&data, &req).await {
+            Ok(result) => result,
+            Err(e) => {
+                warn!("Trusted header authentication failed: {}", e);
+                return Err(e);
+            }
+        }
     } else {
         // If trusted header is not present, only use JWT authentication
-        try_jwt_authentication(&req, &mut inner_payload, &data).await
-    }?;
+        match try_jwt_authentication(&req, &mut inner_payload, &data).await {
+            Ok(result) => result,
+            Err(e) => {
+                warn!("JWT authentication failed: {}", e);
+                return Err(e);
+            }
+        }
+    };
 
     let context = Context::<Handler> {
         handler: data.backend_handler.clone(),
