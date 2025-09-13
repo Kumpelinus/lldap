@@ -251,7 +251,8 @@ where
     let user_exists = !data
         .get_readonly_handler()
         .list_users(Some(UserRequestFilter::UserId(user_id.clone())), false)
-        .await?.is_empty();
+        .await?
+        .is_empty();
 
     if !user_exists {
         return Err(TcpError::UnauthorizedError(format!(
@@ -626,8 +627,6 @@ where
         .await
         .unwrap_or_else(error_to_http_response)
 }
-
-
 
 #[instrument(skip_all, level = "debug")]
 async fn opaque_register_start<Backend>(

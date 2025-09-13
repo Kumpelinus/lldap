@@ -130,9 +130,9 @@ async fn try_jwt_authentication<Handler: BackendHandler + Clone>(
     inner_payload: &mut actix_web::dev::Payload,
     data: &AppState<Handler>,
 ) -> Result<ValidationResults, actix_web::Error> {
-    BearerAuth::from_request(req, inner_payload).await.map(|bearer| {
-        check_if_token_is_valid(data, bearer.token())
-    })?
+    BearerAuth::from_request(req, inner_payload)
+        .await
+        .map(|bearer| check_if_token_is_valid(data, bearer.token()))?
 }
 
 async fn graphql_route<Handler: BackendHandler + Clone>(

@@ -190,8 +190,6 @@ impl HostService {
         .and_then(extract_user_info_from_auth_response)
     }
 
-
-
     // The `_request` parameter is to make it the same shape as the other functions.
     pub async fn logout() -> Result<()> {
         call_server_empty_response_with_error_message(
