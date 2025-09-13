@@ -37,6 +37,30 @@ cargo clippy --tests --workspace -- -D warnings
 cargo run -- run --config-file lldap_config.docker_template.toml
 ```
 
+## Building with Nix
+
+You can also build LLDAP directly using Nix:
+
+```bash
+# Build the default package (server)
+nix build
+
+# Build and run
+nix run
+```
+
+## Development Shells
+
+The flake provides two development shells:
+
+- `default` - Full development environment
+- `ci` - Minimal environment similar to CI
+
+```bash
+# Use the CI-like environment
+nix develop .#ci
+```
+
 ## Automatic Environment Activation (Optional)
 
 For automatic environment activation when entering the project directory:
