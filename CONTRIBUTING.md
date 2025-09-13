@@ -46,33 +46,9 @@ advanced guides (scripting, migrations, ...) you can contribute to.
 ### Code
 
 If you don't know what to start with, check out the 
-[good first issues](https://github.com/lldap/lldap/labels/good%20first%20issue). 
+[good first issues](https://github.com/lldap/lldap/labels/good%20first%20issue).
 
-#### Development Environment Setup
-
-LLDAP provides a comprehensive Nix development environment that includes all necessary tools and dependencies. This is the recommended way to set up your development environment:
-
-**With Nix (Recommended):**
-```bash
-# Using Nix flakes (recommended)
-nix develop
-
-# Or with direnv for automatic activation
-echo "use flake" > .envrc && direnv allow
-
-# Run all checks
-lldap-check-all
-```
-
-**Manual Setup:**
-If you prefer not to use Nix, you'll need to install:
-- Rust 1.85.0+ with `wasm32-unknown-unknown` target
-- wasm-pack for WebAssembly compilation  
-- Standard build tools (pkg-config, gzip, etc.)
-
-See [docs/nix-development.md](docs/nix-development.md) for detailed information about available development commands and workflow.
-
-#### Development Workflow
+For an alternative development environment setup, see [docs/nix-development.md](docs/nix-development.md). 
 
 Otherwise, if you want to fix a specific bug or implement a feature, make sure
 to start by creating an issue for it (if it doesn't already exist). There, we

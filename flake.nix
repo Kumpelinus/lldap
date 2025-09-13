@@ -86,81 +86,7 @@
           CARGO_TARGET_ARMV7_UNKNOWN_LINUX_MUSLEABIHF_LINKER = "${pkgs.pkgsCross.armv7l-hf-multiplatform.stdenv.cc}/bin/arm-unknown-linux-gnueabihf-gcc";
         };
 
-        # Development scripts
-        devScripts = with pkgs; [
-          (writeShellScriptBin "lldap-build" ''
-            echo "🔨 Building LLDAP workspace..."
-            cargo build --workspace "$@"
-          '')
-          
-          (writeShellScriptBin "lldap-test" ''
-            echo "🧪 Running LLDAP tests..."
-            cargo test --workspace "$@"
-          '')
-          
-          (writeShellScriptBin "lldap-lint" ''
-            echo "🔍 Running clippy linting..."
-            cargo clippy --tests --workspace -- -D warnings "$@"
-          '')
-          
-          (writeShellScriptBin "lldap-fmt" ''
-            echo "📐 Checking code formatting..."
-            cargo fmt --check --all "$@"
-          '')
-          
-          (writeShellScriptBin "lldap-fmt-fix" ''
-            echo "🔧 Fixing code formatting..."
-            cargo fmt --all "$@"
-          '')
-          
-          (writeShellScriptBin "lldap-frontend" ''
-            echo "🌐 Building frontend..."
-            cd app && ./build.sh "$@"
-          '')
-          
-          (writeShellScriptBin "lldap-schema" ''
-            echo "📋 Exporting GraphQL schema..."
-            ./export_schema.sh "$@"
-          '')
-          
-          (writeShellScriptBin "lldap-dev" ''
-            echo "🚀 Starting LLDAP development server..."
-            # Build frontend first
-            lldap-frontend
-            # Start server with config
-            cargo run -- run --config-file lldap_config.docker_template.toml "$@"
-          '')
-          
-          (writeShellScriptBin "lldap-check-all" ''
-            echo "🔍 Running all checks..."
-            echo "1/5 Building workspace..."
-            lldap-build || exit 1
-            echo "2/5 Running tests..."
-            lldap-test || exit 1
-            echo "3/5 Checking formatting..."
-            lldap-fmt || exit 1
-            echo "4/5 Running linter..."
-            lldap-lint || exit 1
-            echo "5/5 Building frontend..."
-            lldap-frontend || exit 1
-            echo "✅ All checks passed!"
-          '')
-          
-          (writeShellScriptBin "lldap-release" ''
-            echo "📦 Building release..."
-            cargo build --release -p lldap "$@"
-          '')
-          
-          (writeShellScriptBin "lldap-validate-env" ''
-            echo "🔍 Validating Nix environment..."
-            if [[ -f "scripts/validate-nix-env.sh" ]]; then
-              exec ./scripts/validate-nix-env.sh "$@"
-            else
-              echo "❌ Validation script not found. Are you in the project root?"
-              exit 1
-            fi
-          '')
-        ];
+
 
       in
       {
@@ -169,24 +95,17 @@
           default = pkgs.mkShell ({
             inherit nativeBuildInputs buildInputs;
             
-            packages = devScripts;
-            
             shellHook = ''
               echo "🔐 LLDAP Development Environment"
               echo "==============================================="
               echo "Rust version: ${rustVersion}"
-              echo "Available commands:"
-              echo "  lldap-build      - Build the workspace"
-              echo "  lldap-test       - Run tests"
-              echo "  lldap-lint       - Run clippy linting"
-              echo "  lldap-fmt        - Check formatting"
-              echo "  lldap-fmt-fix    - Fix formatting"
-              echo "  lldap-frontend   - Build frontend WASM"
-              echo "  lldap-schema     - Export GraphQL schema"
-              echo "  lldap-dev        - Start development server"
-              echo "  lldap-check-all  - Run all checks"
-              echo "  lldap-release    - Build release binary"
-              echo "  lldap-validate-env - Validate environment setup"
+              echo "Standard cargo commands available:"
+              echo "  cargo build --workspace    - Build the workspace"
+              echo "  cargo test --workspace     - Run tests"
+              echo "  cargo clippy --tests --workspace -- -D warnings - Run linting"
+              echo "  cargo fmt --check --all    - Check formatting"
+              echo "  ./app/build.sh              - Build frontend WASM"
+              echo "  ./export_schema.sh          - Export GraphQL schema"
               echo "==============================================="
               echo ""
               
@@ -198,8 +117,6 @@
               # Check if we're in the right directory
               if [[ ! -f "Cargo.toml" ]]; then
                 echo "⚠️  Run this from the project root directory"
-              else
-                echo "💡 Tip: Run 'lldap-validate-env' to verify your setup"
               fi
             '';
           } // commonEnvVars);

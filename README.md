@@ -35,14 +35,13 @@
 
 - [About](#about)
 - [Installation](docs/install.md)
-- [Development](#development)
-  - [Nix development environment](docs/nix-development.md)
 - [Usage](#usage)
   - [Recommended architecture](#recommended-architecture)
 - [Client configuration](#client-configuration)
   - [Known compatible services](#known-compatible-services)
   - [General configuration guide](#general-configuration-guide)
   - [Incompatible services](#incompatible-services)
+- [Development](#development)
 - [Frequently Asked Questions](#frequently-asked-questions)
 - [Contributions](#contributions)
 
@@ -85,29 +84,7 @@ MySQL/MariaDB or PostgreSQL.
 
 ## Development
 
-LLDAP provides a comprehensive Nix flake for easy development environment setup. The Nix environment includes all necessary tools, dependencies, and convenient scripts for building, testing, and running LLDAP.
-
-### Quick Start with Nix
-
-```bash
-# Enter the development environment
-nix develop
-
-# Run all checks
-lldap-check-all
-
-# Start development server
-lldap-dev
-```
-
-For detailed information about the Nix development environment, including available commands and setup instructions, see [docs/nix-development.md](docs/nix-development.md).
-
-The Nix environment provides:
-- Rust 1.85.0 (MSRV) with all required components
-- WebAssembly compilation support (wasm-pack)
-- Cross-compilation targets
-- Development convenience scripts
-- Automatic environment activation with direnv
+For setting up a development environment, see the [installation guide](docs/install.md#from-source). Alternatively, you can use the Nix development environment described in [docs/nix-development.md](docs/nix-development.md).
 
 ## Installation
 

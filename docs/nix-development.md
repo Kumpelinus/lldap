@@ -1,104 +1,88 @@
 # Nix Development Environment
 
-This repository includes a comprehensive Nix flake for development that provides all necessary tools and dependencies for building, testing, and developing LLDAP.
+LLDAP provides a Nix flake that sets up a complete development environment with all necessary tools and dependencies.
 
-## Prerequisites
+## Requirements
 
-- [Nix package manager](https://nixos.org/download.html) with flakes enabled
-- Optionally: [direnv](https://direnv.net/) for automatic environment activation
+- [Nix](https://nixos.org/download.html) with flakes enabled
+- (Optional) [direnv](https://direnv.net/) for automatic environment activation
 
 ## Quick Start
 
-### With direnv (Recommended)
+```bash
+# Clone the repository
+git clone https://github.com/lldap/lldap.git
+cd lldap
+
+# Enter the development environment
+nix develop
+
+# Build the project
+cargo build --workspace
+
+# Run tests
+cargo test --workspace
+
+# Build the frontend
+./app/build.sh
+```
+
+## Automatic Environment Activation (Optional)
+
+For automatic environment activation when entering the project directory:
 
 1. Install direnv: `nix profile install nixpkgs#direnv`
-2. Set up direnv shell hook in your shell configuration
+2. Set up direnv shell hook in your shell configuration 
 3. Navigate to the project directory and allow direnv: `direnv allow`
 4. The environment will automatically activate when entering the directory
 
-### Without direnv
+## Available Tools
 
-```bash
-# Enter the development shell
-nix develop
+The Nix environment provides:
 
-# Or use the specific CI environment
-nix develop .#ci
-```
-
-## Available Commands
-
-The development environment provides convenient wrapper scripts:
-
-### Build Commands
-- `lldap-build` - Build the entire workspace
-- `lldap-release` - Build release binary
-- `lldap-frontend` - Build the WebAssembly frontend
-
-### Testing & Quality
-- `lldap-test` - Run all tests
-- `lldap-lint` - Run clippy linting (with warnings as errors)
-- `lldap-fmt` - Check code formatting
-- `lldap-fmt-fix` - Fix code formatting automatically
-- `lldap-check-all` - Run all checks (build, test, format, lint, frontend)
-
-### Development
-- `lldap-dev` - Start development server with default config
-- `lldap-schema` - Export GraphQL schema
+- **Rust 1.85.0** (MSRV) with all required components (clippy, rustfmt, rust-src)
+- **WebAssembly support**: wasm-pack and wasm32-unknown-unknown target
+- **Cross-compilation targets**:
+  - x86_64-unknown-linux-musl
+  - aarch64-unknown-linux-musl
+  - armv7-unknown-linux-musleabihf
+- **Development tools**: pkg-config, gzip, curl, git, jq, gcc
+- **Additional utilities**: cargo-watch, bacon, cargo-expand
 
 ## Development Workflow
 
-### Initial Setup
 ```bash
-# Enter development environment
+# Enter the development environment
 nix develop
 
-# Run all checks to ensure everything works
-lldap-check-all
-```
+# Build the workspace
+cargo build --workspace
 
-### Daily Development
-```bash
-# Build and test your changes
-lldap-build
-lldap-test
+# Run tests
+cargo test --workspace
 
-# Check code quality
-lldap-fmt
-lldap-lint
+# Check formatting
+cargo fmt --check --all
 
-# Build frontend after frontend changes
-lldap-frontend
+# Run linting
+cargo clippy --tests --workspace -- -D warnings
+
+# Build frontend
+./app/build.sh
+
+# Export GraphQL schema (if needed)
+./export_schema.sh
 
 # Start development server
-lldap-dev
+cargo run -- run --config-file lldap_config.docker_template.toml
 ```
-
-### Environment Validation
-```bash
-# Validate your environment setup
-lldap-validate-env
-```
-
-### Before Committing
-```bash
-# Run complete check suite
-lldap-check-all
-```
-
-## Quick Start Example
-
-For a complete beginner's guide with step-by-step instructions, see [examples/nix-quick-start.md](../examples/nix-quick-start.md).
 
 ## Environment Features
 
 ### Rust Toolchain
 - Rust 1.85.0 (MSRV) with required components
 - Pre-configured for WebAssembly compilation
-- Cross-compilation targets included:
-  - `x86_64-unknown-linux-musl`
-  - `aarch64-unknown-linux-musl` 
-  - `armv7-unknown-linux-musleabihf`
+- Cross-compilation targets included
 
 ### Development Tools
 - `wasm-pack` for WebAssembly compilation
@@ -114,7 +98,7 @@ For a complete beginner's guide with step-by-step instructions, see [examples/ni
 
 ## Building with Nix
 
-You can also build LLDAP using Nix:
+You can also build LLDAP directly using Nix:
 
 ```bash
 # Build the default package (server)
@@ -124,12 +108,24 @@ nix build
 nix run
 ```
 
+## Development Shells
+
+The flake provides two development shells:
+
+- `default` - Full development environment
+- `ci` - Minimal environment similar to CI
+
+```bash
+# Use the CI-like environment
+nix develop .#ci
+```
+
 ## Troubleshooting
 
 ### Common Issues
 
 1. **wasm-pack not found**: Ensure you're in the Nix shell environment
-2. **Build failures**: Run `lldap-check-all` to identify issues
+2. **Build failures**: Check that all tools are available
 3. **Frontend build fails**: Ensure gzip is available (included in the environment)
 
 ### Verification
@@ -142,27 +138,3 @@ rustc --version  # Should show 1.85.0
 # Verify cross-compilation targets
 rustup target list --installed
 ```
-
-## Integration with CI
-
-The Nix environment is designed to match the CI requirements:
-
-- Same Rust version (1.85.0)
-- Same build commands and flags
-- Same linting configuration
-- Same test execution
-
-You can use the `ci` development shell for a minimal CI-like environment:
-
-```bash
-nix develop .#ci
-```
-
-## Customization
-
-The flake provides two development shells:
-
-- `default` - Full development environment with convenience scripts
-- `ci` - Minimal environment similar to CI
-
-You can extend the environment by modifying `flake.nix` or create a `shell.nix` for project-specific customizations.
