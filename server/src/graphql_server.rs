@@ -130,8 +130,8 @@ async fn try_jwt_authentication<Handler: BackendHandler + Clone>(
     inner_payload: &mut actix_web::dev::Payload,
     data: &AppState<Handler>,
 ) -> Result<ValidationResults, actix_web::Error> {
-    BearerAuth::from_request(req, inner_payload).await.and_then(|bearer| {
-        Ok(check_if_token_is_valid(data, bearer.token()))
+    BearerAuth::from_request(req, inner_payload).await.map(|bearer| {
+        check_if_token_is_valid(data, bearer.token())
     })?
 }
 
