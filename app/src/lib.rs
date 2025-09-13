@@ -2,6 +2,7 @@
 #![forbid(non_ascii_idents)]
 #![allow(clippy::uninlined_format_args)]
 #![allow(clippy::let_unit_value)]
+#![allow(clippy::unnecessary_operation)]
 
 pub mod components;
 pub mod infra;
