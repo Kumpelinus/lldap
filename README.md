@@ -41,7 +41,6 @@
   - [Known compatible services](#known-compatible-services)
   - [General configuration guide](#general-configuration-guide)
   - [Incompatible services](#incompatible-services)
-- [Development](#development)
 - [Frequently Asked Questions](#frequently-asked-questions)
 - [Contributions](#contributions)
 
@@ -81,10 +80,6 @@ truth for users, via LDAP.
 
 By default, the data is stored in SQLite, but you can swap the backend with
 MySQL/MariaDB or PostgreSQL.
-
-## Development
-
-For setting up a development environment, see the [installation guide](docs/install.md#from-source). Alternatively, you can use the Nix development environment described in [docs/nix-development.md](docs/nix-development.md).
 
 ## Installation
 
