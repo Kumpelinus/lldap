@@ -42,6 +42,7 @@ pub struct CreateGroup;
     response_derives = "Debug",
     custom_scalars_module = "crate::common::graphql"
 )]
+#[allow(dead_code)]
 pub struct ListUsers;
 
 #[derive(GraphQLQuery)]
@@ -52,6 +53,7 @@ pub struct ListUsers;
     variables_derives = "Debug,Clone",
     custom_scalars_module = "crate::common::graphql"
 )]
+#[allow(dead_code)]
 pub struct GetUserDetails;
 
 #[derive(GraphQLQuery)]
@@ -61,6 +63,7 @@ pub struct GetUserDetails;
     response_derives = "Debug",
     custom_scalars_module = "crate::common::graphql"
 )]
+#[allow(dead_code)]
 pub struct ListGroups;
 
 #[derive(GraphQLQuery)]

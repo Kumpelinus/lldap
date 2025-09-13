@@ -190,15 +190,7 @@ impl HostService {
         .and_then(extract_user_info_from_auth_response)
     }
 
-    pub async fn trusted_header_auth() -> Result<(String, bool)> {
-        call_server_json_with_error_message::<login::ServerTrustedHeaderResponse, _>(
-            &(base_url() + "/auth/trusted-header"),
-            GET_REQUEST,
-            "Could not authenticate via trusted header: ",
-        )
-        .await
-        .map(|response| (response.user_id, response.is_admin))
-    }
+
 
     // The `_request` parameter is to make it the same shape as the other functions.
     pub async fn logout() -> Result<()> {

@@ -627,36 +627,7 @@ where
         .unwrap_or_else(error_to_http_response)
 }
 
-#[instrument(skip_all, level = "debug")]
-async fn trusted_header_auth<Backend>(
-    data: web::Data<AppState<Backend>>,
-    request: HttpRequest,
-) -> TcpResult<HttpResponse>
-where
-    Backend: TcpBackendHandler + BackendHandler + 'static,
-{
-    // Check if trusted header auth is enabled
-    if !data.trusted_header_options.enabled {
-        return Err(TcpError::UnauthorizedError(
-            "Trusted header authentication is disabled".to_string(),
-        ));
-    }
 
-    let user_id = validate_trusted_header(&data, &request).await?;
-    get_trusted_header_successful_response(&data, &user_id).await
-}
-
-async fn trusted_header_auth_handler<Backend>(
-    data: web::Data<AppState<Backend>>,
-    request: HttpRequest,
-) -> HttpResponse
-where
-    Backend: TcpBackendHandler + BackendHandler + 'static,
-{
-    trusted_header_auth(data, request)
-        .await
-        .unwrap_or_else(error_to_http_response)
-}
 
 #[instrument(skip_all, level = "debug")]
 async fn opaque_register_start<Backend>(
@@ -890,10 +861,6 @@ where
             .route(web::post().to(opaque_login_finish_handler::<Backend>)),
     )
     .service(web::resource("/simple/login").route(web::post().to(simple_login_handler::<Backend>)))
-    .service(
-        web::resource("/trusted-header")
-            .route(web::get().to(trusted_header_auth_handler::<Backend>)),
-    )
     .service(web::resource("/refresh").route(web::get().to(get_refresh_handler::<Backend>)))
     .service(web::resource("/logout").route(web::get().to(get_logout_handler::<Backend>)))
     .service(
