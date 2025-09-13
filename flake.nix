@@ -150,6 +150,16 @@
             echo "📦 Building release..."
             cargo build --release -p lldap "$@"
           '')
+          
+          (writeShellScriptBin "lldap-validate-env" ''
+            echo "🔍 Validating Nix environment..."
+            if [[ -f "scripts/validate-nix-env.sh" ]]; then
+              exec ./scripts/validate-nix-env.sh "$@"
+            else
+              echo "❌ Validation script not found. Are you in the project root?"
+              exit 1
+            fi
+          '')
         ];
 
       in
@@ -176,6 +186,7 @@
               echo "  lldap-dev        - Start development server"
               echo "  lldap-check-all  - Run all checks"
               echo "  lldap-release    - Build release binary"
+              echo "  lldap-validate-env - Validate environment setup"
               echo "==============================================="
               echo ""
               
@@ -187,6 +198,8 @@
               # Check if we're in the right directory
               if [[ ! -f "Cargo.toml" ]]; then
                 echo "⚠️  Run this from the project root directory"
+              else
+                echo "💡 Tip: Run 'lldap-validate-env' to verify your setup"
               fi
             '';
           } // commonEnvVars);

@@ -1,0 +1,68 @@
+name: Nix Environment Validation
+
+on:
+  push:
+    paths:
+      - 'flake.nix'
+      - 'flake.lock'
+      - 'shell.nix'
+      - '.github/workflows/nix.yml'
+  pull_request:
+    paths:
+      - 'flake.nix'
+      - 'flake.lock'
+      - 'shell.nix'
+      - '.github/workflows/nix.yml'
+
+jobs:
+  nix-environment:
+    name: Validate Nix Environment
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Install Nix
+        uses: cachix/install-nix-action@v26
+        with:
+          nix_path: nixpkgs=channel:nixos-unstable
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+            
+      - name: Check flake
+        run: nix flake check --verbose
+        
+      - name: Build development shell
+        run: nix develop --command echo "Development shell built successfully"
+        
+      - name: Validate environment in shell
+        run: nix develop --command ./scripts/validate-nix-env.sh
+        
+      - name: Test basic build
+        run: nix develop --command lldap-build
+        
+      - name: Test formatting check
+        run: nix develop --command lldap-fmt
+        
+      - name: Test linting  
+        run: nix develop --command lldap-lint
+        
+      - name: Test frontend build
+        run: nix develop --command lldap-frontend
+
+  nix-legacy:
+    name: Validate Legacy Shell
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Install Nix
+        uses: cachix/install-nix-action@v26
+        with:
+          nix_path: nixpkgs=channel:nixos-unstable
+          
+      - name: Test legacy shell.nix
+        run: nix-shell --run "echo 'Legacy shell works'; rustc --version"

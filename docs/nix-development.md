@@ -74,11 +74,21 @@ lldap-frontend
 lldap-dev
 ```
 
+### Environment Validation
+```bash
+# Validate your environment setup
+lldap-validate-env
+```
+
 ### Before Committing
 ```bash
 # Run complete check suite
 lldap-check-all
 ```
+
+## Quick Start Example
+
+For a complete beginner's guide with step-by-step instructions, see [examples/nix-quick-start.md](../examples/nix-quick-start.md).
 
 ## Environment Features
 
